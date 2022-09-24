@@ -24,14 +24,36 @@ public with sharing class OpportunityService {
                 ProductSelector.selectProductById(dmlException.getDmlId(0));
 
         String errorMessage = '\'' + failedProduct.Name + '\'' + ' (' + failedProduct.Id + ')' +
-                ' stock is not enough to satisfy the requested quantity of ';
+                ' stock is not enough to satisfy the requested quantity';
 
         List<OpportunityLineItem> failedLineItemsByIds =
                 OpportunityLineItemSelector.selectOpportunityLineItemsByFailedProduct(failedProduct);
 
+        Map<Id, Decimal> totalQuantityRequestedByOpportunityId = new Map<Id, Decimal>();
+
         for (OpportunityLineItem item: failedLineItemsByIds) {
-            if (acceptedOpportunitiesIds.contains(item.OpportunityId)) {
-                newValuesByIds.get(item.OpportunityId).addError(errorMessage + item.Quantity + ' units');
+            if (!acceptedOpportunitiesIds.contains(item.OpportunityId)) {
+                continue;
+            }
+
+            if (!totalQuantityRequestedByOpportunityId.containsKey(item.OpportunityId)) {
+                totalQuantityRequestedByOpportunityId.put(item.OpportunityId, 0);
+            }
+
+            Boolean singleRequestQuantityLargerThanStock = item.Quantity > failedProduct.ProductStock__c;
+
+            Boolean totalRequestQuantityLargerThanStock =
+                    totalQuantityRequestedByOpportunityId.get(item.OpportunityId) + item.Quantity > failedProduct.ProductStock__c;
+
+            if (singleRequestQuantityLargerThanStock ||
+                totalRequestQuantityLargerThanStock) {
+
+                newValuesByIds.get(item.OpportunityId).addError(errorMessage);
+            } else {
+                totalQuantityRequestedByOpportunityId.put(
+                        item.OpportunityId,
+                        totalQuantityRequestedByOpportunityId.get(item.OpportunityId) + item.Quantity
+                );
             }
         }
     }

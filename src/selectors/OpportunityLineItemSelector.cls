@@ -6,7 +6,6 @@ public with sharing class OpportunityLineItemSelector {
     }
 
     public static List<OpportunityLineItem> selectOpportunityLineItemsByFailedProduct(Product2 failedProduct) {
-        return [SELECT Id, Product2Id, OpportunityId, Quantity FROM OpportunityLineItem WHERE Product2Id = :failedProduct.Id
-                AND Quantity > :failedProduct.ProductStock__c];
+        return [SELECT Id, Product2Id, OpportunityId, Quantity FROM OpportunityLineItem WHERE Product2Id = :failedProduct.Id];
     }
 }
