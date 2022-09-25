@@ -1,4 +1,7 @@
 public with sharing class OpportunityService {
+
+    private final static String DML_ERROR_MESSAGE = ' stock is not enough to satisfy the requested quantity';
+
     public static Set<Id> getOpportunityIdsWhereStageChangedToWon(
             Map<Id, Opportunity> oldValuesByIds,
             Map<Id, Opportunity> newValuesByIds,
@@ -24,7 +27,7 @@ public with sharing class OpportunityService {
                 ProductSelector.selectProductById(dmlException.getDmlId(0));
 
         String errorMessage = '\'' + failedProduct.Name + '\'' + ' (' + failedProduct.Id + ')' +
-                ' stock is not enough to satisfy the requested quantity';
+                DML_ERROR_MESSAGE;
 
         List<OpportunityLineItem> failedLineItemsByIds =
                 OpportunityLineItemSelector.selectOpportunityLineItemsByFailedProduct(failedProduct);
