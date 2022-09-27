@@ -1,0 +1,36 @@
+<template>
+    <template if:true={isVendor}>
+        <lightning-card title='Create Purchase'>
+                <div class='slds-box' style='margin-left: 10px; margin-right: 10px'>
+                    <div class='slds-m-around_small'>
+                        <lightning-input type='text' style='margin-top: 5px; width: 175px; height: 40px;'
+                                         required label='Purchase Name' message-when-value-missing=' ' value={purchaseName} onchange={handlePurchaseNameChange}></lightning-input>
+                    </div>
+                    <div class='slds-m-around_small' style='margin-top: 30px;'>
+                        <lightning-input type='toggle' style='margin-top: 8px; width: 150px; height: 30px;'
+                                         checked label='Is Draft' value={isDraft} message-toggle-active='' message-toggle-inactive=''></lightning-input>
+                    </div>
+
+                    <div class='slds-box' style='margin: 10px;' if:true={purchaseOrders.length}>
+                        <ul>
+                            <template for:each={purchaseOrders} for:item='order' for:index='index'>
+                                <li key={order.index}>
+
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+
+                    <div class='slds-m-around_small' if:true={purchaseName}>
+                        <lightning-button label='Add Order' onclick={handleShowAddOrder} type="button" variant="brand-outline"></lightning-button>
+
+                        <div class='slds-box' style='margin: 10px;' if:true={showAddOrder}>
+                            <lightning-record-edit-form object-api-name="PurchaseLineItem__c">
+                                <lightning-input-field field-name="Product__c" required aria-label='Product'></lightning-input-field>
+                            </lightning-record-edit-form>
+                        </div>
+                    </div>
+                </div>
+        </lightning-card>
+    </template>
+</template>
