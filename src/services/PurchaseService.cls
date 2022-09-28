@@ -4,8 +4,7 @@ public with sharing class PurchaseService {
 
     public static Set<Id> getPurchaseIdsWhereStatusChangedToCompleted(
             Map<Id, Purchase__c> oldValuesByIds,
-            Map<Id, Purchase__c> newValuesByIds,
-            TriggerOperation operationType) {
+            Map<Id, Purchase__c> newValuesByIds) {
 
         Set<Id> completedPurchasesIds = new Set<Id>();
 
@@ -14,7 +13,7 @@ public with sharing class PurchaseService {
         }
 
         for (Purchase__c purchase: newValuesByIds.values()) {
-            if (PurchaseHelper.checkIfStatusChangedToCompleted(oldValuesByIds, purchase, operationType)) {
+            if (PurchaseHelper.checkIfStatusChangedToCompleted(oldValuesByIds, purchase)) {
                 if (purchase.Vendor__c == null) {
                     purchase.addError(NO_VENDOR_ERROR_MESSAGE);
                 }

@@ -1,11 +1,10 @@
 public with sharing class PurchaseHandler {
     public static void handle(
             Map<Id, Purchase__c> oldValuesByIds,
-            Map<Id, Purchase__c> newValuesByIds,
-            TriggerOperation operationType) {
+            Map<Id, Purchase__c> newValuesByIds) {
 
         Set<Id> completedPurchasesIds =
-                PurchaseService.getPurchaseIdsWhereStatusChangedToCompleted(oldValuesByIds, newValuesByIds, operationType);
+                PurchaseService.getPurchaseIdsWhereStatusChangedToCompleted(oldValuesByIds, newValuesByIds);
 
         List<PurchaseLineItem__c> purchaseLineItems =
                 PurchaseLineItemSelector.selectPurchaseLineItemsByPurchaseIds(completedPurchasesIds);

@@ -6,4 +6,9 @@ public with sharing class ProductSelector {
     public static Product2 selectProductById(Id productId) {
         return [SELECT Id, Name, ProductStock__c FROM Product2 WHERE Id =: productId];
     }
+
+    @AuraEnabled(Cacheable=true)
+    public static String getProductNameById(Id productId) {
+        return [SELECT Id, Name FROM Product2 WHERE Id =: productId]?.Name;
+    }
 }
