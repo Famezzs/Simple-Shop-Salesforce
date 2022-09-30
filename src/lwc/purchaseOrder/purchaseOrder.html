@@ -1,74 +1,72 @@
 <template>
-    <template if:true={isVendor}>
-        <lightning-card title='Draft Purchase'>
-            <div class='slds-box' style='margin-left: 10px; margin-right: 10px'>
-                <div class='slds-m-around_small'>
-                    <lightning-input type='text' style='margin-top: 5px; width: 175px; height: 40px;'
-                                     required label='Purchase Name' message-when-value-missing=' ' value={purchaseName}
-                                     onchange={handlePurchaseNameChange}></lightning-input>
-                </div>
-                <div class='slds-m-around_small' style='margin-top: 30px;'>
-                    <lightning-input type='toggle' style='margin-top: 8px; width: 150px; height: 30px;'
-                                     checked label='Is Draft' value={isDraft} message-toggle-active=''
-                                     message-toggle-inactive=''></lightning-input>
-                </div>
-
-                <div class='slds-box' style='margin: 10px;' if:true={purchaseOrders.length}>
-                    <ul>
-                        <template for:each={purchaseOrders} for:item='order' for:index='index'>
-                            <li key={order.index}>
-                                <div style='margin-top: 10px;'>
-                                    <div class='slds-box'>
-                                        <div style='margin-top: 2px; display: flex; wrap-option: wrap;'>
+    <lightning-card title='Create Purchase'>
+        <div class='slds-box' style='margin-left: 10px; margin-right: 10px'>
+            <div class='slds-m-around_small'>
+                <lightning-input type='text' style='margin-top: 5px; width: 175px; height: 40px;'
+                                 required label='Purchase Name' message-when-value-missing=' ' value={purchaseName}
+                                 onchange={handlePurchaseNameChange}></lightning-input>
+            </div>
+            <div class='slds-m-around_small' style='margin-top: 30px;'>
+                <lightning-input type='toggle' style='margin-top: 8px; width: 150px; height: 30px;'
+                                 checked label='Is Draft' value={isDraft} message-toggle-active=''
+                                 message-toggle-inactive='' onchange={handleIsDraftChange}></lightning-input>
+            </div>
+            <div class='slds-box' style='margin: 10px;' if:true={purchaseOrders.length}>
+                <ul>
+                    <template for:each={purchaseOrders} for:item='order' for:index='index'>
+                        <li key={order.index}>
+                            <div style='margin-top: 10px;'>
+                                <div class='slds-box'>
+                                    <div style='margin-top: 2px; display: flex; wrap-option: wrap;'>
                                             <span style='flex: 1'>
                                                 Product: {order.name}
                                             </span>
-                                            <span>
-                                                <lightning-button-icon icon-name='utility:close' alternative-text='Remove Order'
-                                                                size='x-small'
-                                                                title='Remove Order'
-                                                                value={index}
-                                                                onclick={handleRemoveOrder}></lightning-button-icon>
+                                        <span>
+                                                <lightning-button-icon icon-name='utility:close'
+                                                                       alternative-text='Remove Order'
+                                                                       size='x-small'
+                                                                       title='Remove Order'
+                                                                       value={index}
+                                                                       onclick={handleRemoveOrder}></lightning-button-icon>
                                             </span>
-                                        </div>
-                                        Quantity: {order.quantity}</br>
-                                        Price: {order.price}</br>
                                     </div>
+                                    Quantity: {order.quantity}</br>
+                                    Price: {order.price}</br>
                                 </div>
-                            </li>
-                        </template>
-                    </ul>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+
+            <div class='slds-m-around_small' if:true={purchaseName}>
+                <lightning-button label='Add Order' onclick={handleShowAddOrder} type="button"
+                                  variant="brand-outline"></lightning-button>
+
+                <div class='slds-box' style='margin-top: 15px;' if:true={showAddOrder}>
+                    <lightning-record-edit-form object-api-name="PurchaseLineItem__c">
+                        <lightning-input-field field-name='Product__c' required aria-label='Product'
+                                               value={currentOrder}
+                                               onchange={handleCurrentOrderChange}></lightning-input-field>
+                        <lightning-input-field field-name='Quantity__c' required aria-label='Quantity'
+                                               value={quantity}
+                                               onchange={handleQuantityChange}></lightning-input-field>
+                        <lightning-input-field field-name='Price__c' required aria-label='Vendor Price'
+                                               value={price}
+                                               onchange={handlePriceChange}></lightning-input-field>
+
+                        <lightning-button type='button' variant='brand' style='margin-left: 5px;'
+                                          onclick={addPurchaseOrder} label='Add'></lightning-button>
+                        <lightning-button type='button' variant='destructive' style='margin-left: 5px;'
+                                          onclick={clearAllInputFields} label='Cancel'></lightning-button>
+                    </lightning-record-edit-form>
                 </div>
 
-                <div class='slds-m-around_small' if:true={purchaseName}>
-                    <lightning-button label='Add Order' onclick={handleShowAddOrder} type="button"
-                                      variant="brand-outline"></lightning-button>
-
-                    <div class='slds-box' style='margin-top: 15px;' if:true={showAddOrder}>
-                        <lightning-record-edit-form object-api-name="PurchaseLineItem__c">
-                            <lightning-input-field field-name='Product__c' required aria-label='Product'
-                                                   value={currentOrder}
-                                                   onchange={handleCurrentOrderChange}></lightning-input-field>
-                            <lightning-input-field field-name='Quantity__c' required aria-label='Quantity'
-                                                   value={quantity}
-                                                   onchange={handleQuantityChange}></lightning-input-field>
-                            <lightning-input-field field-name='Price__c' required aria-label='Vendor Price'
-                                                   value={price}
-                                                   onchange={handlePriceChange}></lightning-input-field>
-
-                            <lightning-button type='button' variant='brand' style='margin-left: 5px;'
-                                              onclick={addPurchaseOrder} label='Add'></lightning-button>
-                            <lightning-button type='button' variant='destructive' style='margin-left: 5px;'
-                                              onclick={clearAllInputFields} label='Cancel'></lightning-button>
-                        </lightning-record-edit-form>
-                    </div>
-
-                    <div if:true={purchaseOrders.length}>
-                        <lightning-button type='button' variant='success' style='margin-left: 5px;'
-                                          onclick={savePurchase} label='Save'></lightning-button>
-                    </div>
+                <div if:true={purchaseOrders.length}>
+                    <lightning-button type='button' variant='success' style='margin-left: 5px;'
+                                      onclick={savePurchase} disabled={isSaveButtonDisabled} label='Save'></lightning-button>
                 </div>
             </div>
-        </lightning-card>
-    </template>
+        </div>
+    </lightning-card>
 </template>

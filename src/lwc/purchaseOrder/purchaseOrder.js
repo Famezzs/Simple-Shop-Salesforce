@@ -1,11 +1,11 @@
 import {LightningElement, api, wire, track} from 'lwc';
 import {ShowToastEvent} from 'lightning/platformShowToastEvent';
 import {createRecord} from 'lightning/uiRecordApi';
-import {updateRecord} from "lightning/uiRecordApi";
-import getAccountByAccountId from '@salesforce/apex/AccountSelector.getAccountByAccountId';
+import {updateRecord} from 'lightning/uiRecordApi';
 import getProductNameById from '@salesforce/apex/ProductSelector.getProductNameById';
 
 import PURCHASE_OBJECT from '@salesforce/schema/Purchase__c';
+import PURCHASE_ID_FIELD from '@salesforce/schema/Purchase__c.Id';
 import PURCHASE_NAME_FIELD from '@salesforce/schema/Purchase__c.Name';
 import PURCHASE_VENDOR_FIELD from '@salesforce/schema/Purchase__c.Vendor__c';
 import PURCHASE_STATUS_FIELD from '@salesforce/schema/Purchase__c.Status__c';
@@ -20,13 +20,12 @@ export default class PurchaseOrder extends LightningElement {
     @api
     recordId;
 
-    @wire (getAccountByAccountId, {accountId: '$recordId'})
-    account;
-
     @track
     purchaseOrders = [];
 
-    isDraft;
+    isDraft = true;
+
+    isSaveButtonDisabled = false;
 
     showAddOrder = false;
 
@@ -37,18 +36,6 @@ export default class PurchaseOrder extends LightningElement {
     quantity;
 
     price;
-
-    get isVendor() {
-        if (!this.account) {
-            return false;
-        }
-
-        if (!this.account.data) {
-            return false;
-        }
-
-        return this.account.data.Type === 'Vendor';
-    }
 
     handlePurchaseNameChange(event) {
         this.purchaseName = event.target.value;
@@ -80,6 +67,10 @@ export default class PurchaseOrder extends LightningElement {
         this.removePurchaseOrder(index);
     }
 
+    handleIsDraftChange(event) {
+        this.isDraft = event.target.checked;
+    }
+
     addPurchaseOrder() {
 
         if (!this.arePurchaseOrderFieldsValid()) {
@@ -89,12 +80,22 @@ export default class PurchaseOrder extends LightningElement {
 
         getProductNameById({productId: this.currentOrder})
             .then((value) => {
-                let newPurchaseOrder = { product: this.currentOrder, name: value, quantity: this.quantity, price: this.price };
+                let newPurchaseOrder = {
+                    product: this.currentOrder,
+                    name: value,
+                    quantity: this.quantity,
+                    price: this.price
+                };
                 this.purchaseOrders.push(newPurchaseOrder);
                 this.clearAllInputFields();
             })
             .catch(() => {
-                let newPurchaseOrder = { product: this.currentOrder, name: '', quantity: this.quantity, price: this.price };
+                let newPurchaseOrder = {
+                    product: this.currentOrder,
+                    name: '',
+                    quantity: this.quantity,
+                    price: this.price
+                };
                 this.purchaseOrders.push(newPurchaseOrder);
                 this.clearAllInputFields();
             });
@@ -104,6 +105,18 @@ export default class PurchaseOrder extends LightningElement {
         this.currentOrder = null;
         this.quantity = null;
         this.price = null;
+    }
+
+    clearAllOrders() {
+        this.purchaseOrders = [];
+    }
+
+    resetForm() {
+        this.showAddOrder = false;
+        this.clearAllInputFields();
+        this.clearAllOrders();
+        this.purchaseName = null;
+        this.isSaveButtonDisabled = false;
     }
 
     removePurchaseOrder(index) {
@@ -138,59 +151,41 @@ export default class PurchaseOrder extends LightningElement {
         this.showToastNotification('An Error Occurred', message, 'error');
     }
 
+    showSuccess(message) {
+        this.showToastNotification('Success', message, 'success');
+    }
+
     arePurchaseOrderFieldsValid() {
         return this.currentOrder &&
             this.quantity > 0 &&
             this.price > 0;
     }
 
-    savePurchase() {
-        const purchaseRecord = this.createNewPurchaseObject();
+    async savePurchase() {
+        let purchaseRecord = this.createNewPurchaseObject();
+
+        this.isSaveButtonDisabled = true;
 
         createRecord(purchaseRecord)
-            .then(() => {
-                alert('success');
-            })
-            .catch((error) => {
-                alert(error.message);
-            })
-
-        /*
-        createRecord(purchaseRecord)
-            .then((purchaseId) => {
-                this.saveOrders(purchaseId.id);
+            .then(async (purchaseRepresentation) => {
+                await this.saveOrders(purchaseRepresentation.id);
 
                 if (!this.isDraft) {
-                    purchaseRecord.fields[PURCHASE_STATUS_FIELD.fieldApiName] = 'Completed';
-
-                    updateRecord(purchaseRecord)
-                        .then(() => {
-
-                        })
-                        .catch((error) => {
-                           this.showError(error.message + 'createRecord(purchaseRecord)');
-                        });
+                    await this.markPurchaseAsCompleted(purchaseRecord, purchaseRepresentation.id);
                 }
 
-                this.showToastNotification('Success', 'Purchase successfully created!', 'success');
+                this.resetForm();
+                this.showSuccess('Purchase successfully created!');
             })
             .catch((error) => {
-                this.showError(error.message + 'savePurchase()');
+                this.showError(error.message);
             });
-
-         */
     }
 
-    saveOrders(purchaseId) {
-        this.purchaseOrders.forEach((order) => {
-            createRecord(this.createNewOrderObject(order, purchaseId))
-                .then(() => {
-
-                })
-                .catch((error) => {
-                    this.showError(error.message + 'saveOrders()');
-                });
-        });
+    async saveOrders(purchaseId) {
+        for (const order of this.purchaseOrders) {
+            await createRecord(this.createNewOrderObject(order, purchaseId));
+        }
     }
 
     createNewPurchaseObject() {
@@ -198,8 +193,9 @@ export default class PurchaseOrder extends LightningElement {
 
         fields[PURCHASE_NAME_FIELD.fieldApiName] = this.purchaseName;
         fields[PURCHASE_VENDOR_FIELD.fieldApiName] = this.recordId;
+        fields[PURCHASE_STATUS_FIELD.fieldApiName] = 'Draft';
 
-        return { apiName: PURCHASE_OBJECT.objectApiName, fields };
+        return {apiName: PURCHASE_OBJECT.objectApiName, fields};
     }
 
     createNewOrderObject(order, purchaseId) {
@@ -210,6 +206,14 @@ export default class PurchaseOrder extends LightningElement {
         fields[ORDER_PRICE_FIELD.fieldApiName] = order.price;
         fields[ORDER_QUANTITY_FIELD.fieldApiName] = order.quantity;
 
-        return { apiName: ORDER_OBJECT.objectApiName, fields };
+        return {apiName: ORDER_OBJECT.objectApiName, fields};
+    }
+
+    async markPurchaseAsCompleted(purchase, purchaseId) {
+        purchase.apiName = null;
+        purchase.fields[PURCHASE_ID_FIELD.fieldApiName] = purchaseId;
+        purchase.fields[PURCHASE_STATUS_FIELD.fieldApiName] = 'Completed';
+
+        await updateRecord(purchase);
     }
 }
