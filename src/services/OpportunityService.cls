@@ -30,7 +30,7 @@ public with sharing class OpportunityService {
                 DML_ERROR_MESSAGE;
 
         List<OpportunityLineItem> failedLineItemsByIds =
-                OpportunityLineItemSelector.selectOpportunityLineItemsByFailedProduct(failedProduct);
+                OpportunityLineItemSelector.selectOpportunityLineItemsByProductId(failedProduct.Id);
 
         Map<Id, Decimal> totalQuantityRequestedByOpportunityId = new Map<Id, Decimal>();
 

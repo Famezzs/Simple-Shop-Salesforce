@@ -4,11 +4,13 @@ public with sharing class ProductSelector {
     }
 
     public static Product2 selectProductById(Id productId) {
-        return [SELECT Id, Name, ProductStock__c FROM Product2 WHERE Id =: productId];
+        final List<Product2> result = [SELECT Id, Name, ProductStock__c FROM Product2 WHERE Id =: productId];
+        return result.isEmpty() ? null : result.get(0);
     }
 
     @AuraEnabled(Cacheable=true)
     public static String getProductNameById(Id productId) {
-        return [SELECT Id, Name FROM Product2 WHERE Id =: productId]?.Name;
+        final List<Product2> result = [SELECT Id, Name FROM Product2 WHERE Id =: productId];
+        return result.isEmpty() ? null : result.get(0).Name;
     }
 }
