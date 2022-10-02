@@ -55,16 +55,18 @@
                                                value={price}
                                                onchange={handlePriceChange}></lightning-input-field>
 
-                        <lightning-button type='button' variant='brand' style='margin-left: 5px;'
+                        <lightning-button type='button' variant='brand-outline' class='slds-m-left_xx-small'
                                           onclick={addPurchaseOrder} label='Add'></lightning-button>
-                        <lightning-button type='button' variant='destructive' style='margin-left: 5px;'
+                        <lightning-button type='button' variant='destructive-text' class='slds-m-left_x-small'
                                           onclick={clearAllInputFields} label='Cancel'></lightning-button>
                     </lightning-record-edit-form>
                 </div>
 
-                <div if:true={purchaseOrders.length}>
-                    <lightning-button type='button' variant='success' style='margin-left: 5px;'
+                <div if:true={purchaseOrders.length} class='slds-m-top_medium'>
+                    <lightning-button type='button' variant='brand'
                                       onclick={savePurchase} disabled={isSaveButtonDisabled} label='Save'></lightning-button>
+                    <lightning-button type='button' variant='destructive' class='slds-m-left_x-small'
+                                      onclick={resetForm} disabled={isSaveButtonDisabled} label='Reset'></lightning-button>
                 </div>
             </div>
         </div>
