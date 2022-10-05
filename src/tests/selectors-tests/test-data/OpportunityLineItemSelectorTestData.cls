@@ -47,6 +47,23 @@ public class OpportunityLineItemSelectorTestData {
         return productId;
     }
 
+    @TestVisible
+    private static Id createLineItemsWithProduct(Id opportunityId, Integer amount, Decimal stock, Decimal quantity) {
+        final List<OpportunityLineItem> items = new List<OpportunityLineItem>();
+
+        final Id productId = generateProductId(stock);
+
+        final Id priceBookEntryId = generatePriceBookEntryId(productId);
+
+        for (Integer currentAmount = 0; currentAmount < amount; ++currentAmount) {
+            items.add(generateLineItem(opportunityId, priceBookEntryId, productId, quantity));
+        }
+
+        insert items;
+
+        return productId;
+    }
+
     private static Id generatePriceBookEntryId() {
         final PricebookEntry entry = new PricebookEntry(UnitPrice=10,
                 Product2Id=generateProductId(),
@@ -77,6 +94,14 @@ public class OpportunityLineItemSelectorTestData {
         return product2.Id;
     }
 
+    private static Id generateProductId(Decimal stock) {
+        final Product2 product2 = new Product2(Name='Test', ProductStock__c=stock);
+
+        insert product2;
+
+        return product2.Id;
+    }
+
     private static Opportunity generateOpportunity() {
         return new Opportunity(Name='Test', StageName='Prospecting', CloseDate=Date.today());
     }
@@ -90,6 +115,14 @@ public class OpportunityLineItemSelectorTestData {
 
     private static OpportunityLineItem generateLineItem(Id opportunityId, Id priceBookEntryId, Id productId) {
         return new OpportunityLineItem(Quantity = 100,
+                TotalPrice=100,
+                OpportunityId=opportunityId,
+                PricebookEntryId=priceBookEntryId,
+                Product2Id=productId);
+    }
+
+    private static OpportunityLineItem generateLineItem(Id opportunityId, Id priceBookEntryId, Id productId, Decimal quantity) {
+        return new OpportunityLineItem(Quantity = quantity,
                 TotalPrice=100,
                 OpportunityId=opportunityId,
                 PricebookEntryId=priceBookEntryId,

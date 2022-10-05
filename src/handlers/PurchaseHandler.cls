@@ -19,7 +19,9 @@ public with sharing class PurchaseHandler {
                 (ProductSelector.selectProductsByIds(productsIds));
 
         for (PurchaseLineItem__c item: purchaseLineItems) {
-            productsByIds.get(item.Product__c).ProductStock__c += item.Quantity__c;
+            if (productsByIds.containsKey(item.Product__c)) {
+                productsByIds.get(item.Product__c).ProductStock__c += item.Quantity__c;
+            }
         }
 
         Database.update(productsByIds.values());
